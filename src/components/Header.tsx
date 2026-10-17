@@ -1,9 +1,11 @@
 import React from 'react';
-import { Flame, BarChart2, Settings, PenTool, Play, HelpCircle } from 'lucide-react';
+import { Flame, BarChart2, Settings, PenTool, Play, HelpCircle, BookOpen } from 'lucide-react';
+
+export type AppTab = 'selector' | 'draw' | 'practice' | 'vocab';
 
 interface HeaderProps {
-  activeTab: 'selector' | 'draw' | 'practice';
-  setActiveTab: (tab: 'selector' | 'draw' | 'practice') => void;
+  activeTab: AppTab;
+  setActiveTab: (tab: AppTab) => void;
   selectedCount: number;
   currentStreak: number;
   theme: 'dark' | 'light';
@@ -51,6 +53,15 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <PenTool size={15} />
           <span>Draw Test</span>
+        </button>
+
+        <button
+          className={`nav-tab-btn ${activeTab === 'vocab' ? 'active' : ''}`}
+          onClick={() => setActiveTab('vocab')}
+          title="Vocabulary — Learn and practice words written in kana"
+        >
+          <BookOpen size={15} />
+          <span>Vocabulary</span>
         </button>
       </nav>
 

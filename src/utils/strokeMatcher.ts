@@ -248,6 +248,12 @@ export function normalizeStrokes(strokes: Stroke[], targetSize = 100): Stroke[] 
   );
 }
 
+// Glyphs missing from the KanjiVG kana subset, needed to draw whole words
+const EXTRA_REFERENCE_PATHS: Record<string, { paths: string[] }> = {
+  // Long vowel mark (chōonpu), written as a single left-to-right stroke
+  'ー': { paths: ['M14.5,53.5c3.25,0.75,7.25,1,11.25,0.75c18.5-1.25,42.5-3,57-3.5c4-0.12,7.25,0.38,9.25,1'] },
+};
+
 // Cache for parsed & normalized reference strokes
 const referenceStrokeCache = new Map<string, Stroke[]>();
 
@@ -260,7 +266,7 @@ export function getReferenceStrokes(char: string): Stroke[] {
   }
 
   // Handle single character
-  const single = KANJIVG_KANA[char];
+  const single = KANJIVG_KANA[char] ?? EXTRA_REFERENCE_PATHS[char];
   if (single) {
     const rawStrokes = single.paths.map((p) =>
       resampleStroke(parseSvgPathToPolyline(p), RESAMPLE_POINTS)

@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Lightbulb, Keyboard, CheckCircle, Sparkles } from 'lucide-react';
+import { X, Lightbulb, Keyboard, CheckCircle, Sparkles, BookOpen } from 'lucide-react';
 
 interface HelpModalProps {
   isOpen: boolean;
@@ -59,6 +59,16 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
             <div>
               <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: '0.15rem' }}>4. Try Different Fonts</strong>
               Challenge yourself with Gothic, Mincho, Handwritten, or Calligraphy fonts in Settings so you can recognize kana in any style.
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+            <div style={{ padding: '0.45rem', borderRadius: 'var(--radius-xs)', background: 'var(--accent-wisteria-soft)', color: 'var(--accent-wisteria)', flexShrink: 0 }}>
+              <BookOpen size={16} />
+            </div>
+            <div>
+              <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: '0.15rem' }}>5. Learn Real Words</strong>
+              The <strong>Vocabulary</strong> tab lets you study common words with their pronunciation and meaning, then practice by typing their reading or drawing them kana by kana. Words are written in kana only — kanji should be learned separately.
             </div>
           </div>
         </div>

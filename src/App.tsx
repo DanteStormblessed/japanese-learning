@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Header } from './components/Header';
+import { Header, type AppTab } from './components/Header';
 import { KanaSelector } from './components/KanaSelector';
 import { DrawTestView } from './components/DrawTestView';
 import { PracticeView } from './components/PracticeView';
+import { VocabularyView } from './components/VocabularyView';
 import { StatsModal } from './components/StatsModal';
 import { SettingsModal } from './components/SettingsModal';
 import { HelpModal } from './components/HelpModal';
@@ -21,7 +22,7 @@ import type { JapaneseFontFamily, PracticeStats } from './types/kana';
 
 export const App: React.FC = () => {
   // Navigation
-  const [activeTab, setActiveTab] = useState<'selector' | 'draw' | 'practice'>('selector');
+  const [activeTab, setActiveTab] = useState<AppTab>('selector');
 
   // Core application state
   const [selectedIds, setSelectedIds] = useState<string[]>(loadSelectedIds);
@@ -154,6 +155,8 @@ export const App: React.FC = () => {
             onGoToSelector={() => setActiveTab('selector')}
           />
         )}
+
+        {activeTab === 'vocab' && <VocabularyView fontClass={activeFontClass} />}
 
         {activeTab === 'practice' && (
           <PracticeView

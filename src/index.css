@@ -1289,3 +1289,177 @@ select {
     font-size: 4.5rem;
   }
 }
+/* ===== VOCABULARY ===== */
+.vocab-page {
+  max-width: 1040px;
+  margin: 0 auto;
+}
+
+.vocab-category-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem;
+}
+
+.kanji-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 0.85rem;
+  border-radius: 4px;
+  background: var(--accent-gold-soft);
+  border-left: 3px solid var(--accent-gold);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.word-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.6rem;
+}
+
+.word-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  position: relative;
+}
+
+.word-card-kana {
+  font-size: 1.9rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text-highlight);
+  padding-right: 2.2rem;
+  word-break: keep-all;
+}
+
+.word-card-romaji {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent-sakura);
+}
+
+.word-card-meaning {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.word-card-audio {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.65rem;
+}
+
+.word-breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.word-breakdown-unit {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.2rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  background: var(--bg-hover);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.word-breakdown-unit strong {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.word-kanji-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.word-kanji-tag .kanji-glyph {
+  font-size: 0.95rem;
+  color: var(--accent-gold);
+  font-weight: 600;
+}
+
+.word-card-note {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+/* Draw-the-word slots */
+.word-slot-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.word-slot {
+  width: 54px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.35rem 0.2rem;
+  border-radius: 4px;
+  background: var(--bg-hover);
+  border: 1px solid transparent;
+}
+
+.word-slot-char {
+  font-size: 1.5rem;
+  line-height: 1.2;
+  height: 1.8rem;
+  color: var(--text-muted);
+}
+
+.word-slot-label {
+  font-size: 0.64rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.word-slot.current {
+  border-color: var(--accent-sakura);
+  background: var(--accent-sakura-soft);
+}
+
+.word-slot.ok .word-slot-char {
+  color: var(--accent-matcha);
+}
+
+.word-slot.retry .word-slot-char {
+  color: var(--accent-gold);
+}
+
+.word-slot.missed .word-slot-char {
+  color: var(--accent-persimmon);
+}
+
+@media (max-width: 480px) {
+  .word-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .word-slot {
+    width: 46px;
+  }
+}

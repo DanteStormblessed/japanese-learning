@@ -185,3 +185,13 @@ function playSpeechSynthesisFallback(text: string, playId: number): Promise<bool
     }
   });
 }
+
+/**
+ * Speak a whole Japanese word or phrase (kana) using the Web Speech API.
+ * Always stops any previous playback before starting.
+ */
+export function playWordAudio(text: string): Promise<boolean> {
+  stopKanaAudio();
+  if (!text) return Promise.resolve(false);
+  return playSpeechSynthesisFallback(text.trim(), currentPlayId);
+}
