@@ -149,6 +149,7 @@ export const App: React.FC = () => {
         {activeTab === 'draw' && (
           <DrawTestView
             selectedIds={selectedIds}
+            onSelectedIdsChange={setSelectedIds}
             fontClass={activeFontClass}
             onGoToSelector={() => setActiveTab('selector')}
           />

@@ -30,26 +30,26 @@ import {
   PenTool,
   HelpCircle,
   Flame,
+  Lock,
+  Unlock,
 } from 'lucide-react';
 
 interface DrawTestViewProps {
   selectedIds: string[];
+  onSelectedIdsChange: React.Dispatch<React.SetStateAction<string[]>>;
   fontClass: string;
   onGoToSelector: () => void;
 }
 
 export const DrawTestView: React.FC<DrawTestViewProps> = ({
-  selectedIds: appSelectedIds,
+  selectedIds: drawSelectedIds,
+  onSelectedIdsChange: setDrawSelectedIds,
   fontClass,
 }) => {
   // Navigation between Selection stage and Active Drawing stage
   const [viewStage, setViewStage] = useState<'select' | 'drawing'>('select');
 
-  // Draw-specific character selection state (defaults to appSelectedIds or first 15 hiragana)
-  const [drawSelectedIds, setDrawSelectedIds] = useState<string[]>(() => {
-    if (appSelectedIds.length > 0) return appSelectedIds;
-    return HIRAGANA_CHARACTERS.slice(0, 15).map((c) => c.id);
-  });
+  // Character selection is shared with the Practice selector (owned by App)
 
   // Selector controls inside Draw Test
   const [activeScript, setActiveScript] = useState<ScriptType>('hiragana');
@@ -58,7 +58,9 @@ export const DrawTestView: React.FC<DrawTestViewProps> = ({
   // Drawing test settings
   const [autoPlayAudio, setAutoPlayAudio] = useState<boolean>(false);
   const [audioVolume, setAudioVolume] = useState<number>(() => getKanaVolume());
+  // Guide is shown for the current card only, unless locked to persist across cards
   const [showGhostGuide, setShowGhostGuide] = useState<boolean>(false);
+  const [isGuideLocked, setIsGuideLocked] = useState<boolean>(false);
   const [isPlayingAudio, setIsPlayingAudio] = useState<boolean>(false);
   const playedCardKeyRef = useRef<string | null>(null);
 
@@ -185,6 +187,7 @@ export const DrawTestView: React.FC<DrawTestViewProps> = ({
     setStrokes([]);
     setVerificationResult(null);
     setShowMnemonic(false);
+    setShowGhostGuide(isGuideLocked);
     setViewStage('drawing');
   };
 
@@ -284,8 +287,9 @@ export const DrawTestView: React.FC<DrawTestViewProps> = ({
 
     ctx.restore();
 
-    // Authentic KanjiVG calligraphy ghost guide with stroke numbers
-    if (showGhostGuide && currentKana) {
+    // Authentic KanjiVG calligraphy ghost guide with stroke numbers.
+    // Always revealed after checking so the user can compare against the reference.
+    if ((showGhostGuide || verificationResult) && currentKana) {
       renderKanjiVgGuide(canvas, currentKana.character, {
         strokeColor: 'rgba(235, 110, 130, 0.42)',
         lineWidth: 6,
@@ -318,7 +322,7 @@ export const DrawTestView: React.FC<DrawTestViewProps> = ({
     }
 
     ctx.restore();
-  }, [strokes, showGhostGuide, currentKana]);
+  }, [strokes, showGhostGuide, verificationResult, currentKana]);
 
   useEffect(() => {
     if (viewStage === 'drawing') {
@@ -462,8 +466,24 @@ export const DrawTestView: React.FC<DrawTestViewProps> = ({
       setStrokes([]);
       setVerificationResult(null);
       setShowMnemonic(false);
+      setShowGhostGuide(isGuideLocked);
     }
-  }, [currentIndex, testPool.length, sessionCorrect, sessionMistakes]);
+  }, [currentIndex, testPool.length, sessionCorrect, sessionMistakes, isGuideLocked]);
+
+  const handleToggleGuide = () => {
+    if (showGhostGuide) {
+      setShowGhostGuide(false);
+      setIsGuideLocked(false);
+    } else {
+      setShowGhostGuide(true);
+    }
+  };
+
+  const handleToggleGuideLock = () => {
+    const nextLocked = !isGuideLocked;
+    setIsGuideLocked(nextLocked);
+    if (nextLocked) setShowGhostGuide(true);
+  };
 
   // Keyboard shortcut for Enter/Space
   useEffect(() => {
@@ -874,22 +894,51 @@ export const DrawTestView: React.FC<DrawTestViewProps> = ({
                 </span>
               </div>
 
-              <button
-                className="btn-secondary"
-                onClick={() => setShowGhostGuide((prev) => !prev)}
-                title={showGhostGuide ? 'Hide outline guide' : 'Show outline guide'}
-                style={{ padding: '0.5rem 0.9rem', fontSize: '0.82rem', gap: '0.4rem' }}
-              >
-                {showGhostGuide ? <EyeOff size={15} /> : <Eye size={15} />}
-                <span>{showGhostGuide ? 'Hide Guide' : 'Show Guide'}</span>
-              </button>
+              <div style={{ display: 'flex', gap: '0.25rem' }}>
+                <button
+                  className={`btn-secondary ${showGhostGuide ? 'active' : ''}`}
+                  onClick={handleToggleGuide}
+                  title={showGhostGuide ? 'Hide outline guide' : 'Show outline guide for this character'}
+                  style={{
+                    padding: '0.5rem 0.9rem',
+                    fontSize: '0.82rem',
+                    gap: '0.4rem',
+                    color: showGhostGuide ? 'var(--accent-sakura)' : undefined,
+                    borderColor: showGhostGuide ? 'var(--accent-sakura)' : undefined,
+                  }}
+                >
+                  {showGhostGuide ? <EyeOff size={15} /> : <Eye size={15} />}
+                  <span>{showGhostGuide ? 'Hide Guide' : 'Show Guide'}</span>
+                </button>
+
+                <button
+                  className={`btn-secondary ${isGuideLocked ? 'active' : ''}`}
+                  onClick={handleToggleGuideLock}
+                  title={isGuideLocked ? 'Guide locked: shown on every character (click to unlock)' : 'Lock guide so it stays visible on every character'}
+                  aria-label={isGuideLocked ? 'Unlock guide' : 'Lock guide'}
+                  aria-pressed={isGuideLocked}
+                  style={{
+                    padding: '0.5rem 0.65rem',
+                    color: isGuideLocked ? 'var(--accent-sakura)' : undefined,
+                    borderColor: isGuideLocked ? 'var(--accent-sakura)' : undefined,
+                  }}
+                >
+                  {isGuideLocked ? <Lock size={15} /> : <Unlock size={15} />}
+                </button>
+              </div>
 
               {currentKana.mnemonic && (
                 <button
-                  className="btn-secondary"
+                  className={`btn-secondary ${showMnemonic ? 'active' : ''}`}
                   onClick={() => setShowMnemonic((prev) => !prev)}
-                  title="Show memory hint"
-                  style={{ padding: '0.5rem 0.65rem' }}
+                  title={showMnemonic ? 'Hide memory hint' : 'Show memory hint'}
+                  aria-label={showMnemonic ? 'Hide memory hint' : 'Show memory hint'}
+                  aria-pressed={showMnemonic}
+                  style={{
+                    padding: '0.5rem 0.65rem',
+                    color: showMnemonic ? 'var(--accent-gold)' : undefined,
+                    borderColor: showMnemonic ? 'var(--accent-gold)' : undefined,
+                  }}
                 >
                   <HelpCircle size={15} />
                 </button>
@@ -910,12 +959,12 @@ export const DrawTestView: React.FC<DrawTestViewProps> = ({
             }}
           >
             {/* Left Column: Canvas and Action Buttons */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', width: '340px', flexShrink: 0 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', width: 'min(440px, 100%)', flexShrink: 0 }}>
               <div
                 style={{
                   position: 'relative',
-                  width: '340px',
-                  height: '340px',
+                  width: '100%',
+                  aspectRatio: '1 / 1',
                   background: 'var(--bg-card)',
                   borderRadius: '4px',
                   border: '1px solid var(--border-medium)',
@@ -927,8 +976,8 @@ export const DrawTestView: React.FC<DrawTestViewProps> = ({
               >
                 <canvas
                   ref={canvasRef}
-                  width={340}
-                  height={340}
+                  width={440}
+                  height={440}
                   style={{
                     width: '100%',
                     height: '100%',
@@ -976,10 +1025,10 @@ export const DrawTestView: React.FC<DrawTestViewProps> = ({
                     onClick={handleUndo}
                     disabled={strokes.length === 0 || isVerifying}
                     title="Undo last stroke"
-                    style={{ padding: '0.45rem 0.75rem', fontSize: '0.8rem' }}
+                    aria-label="Undo last stroke"
+                    style={{ padding: '0.45rem 0.65rem', fontSize: '0.8rem' }}
                   >
                     <RotateCcw size={14} />
-                    <span>Undo</span>
                   </button>
 
                   <button
@@ -987,33 +1036,46 @@ export const DrawTestView: React.FC<DrawTestViewProps> = ({
                     onClick={handleClear}
                     disabled={strokes.length === 0 || isVerifying}
                     title="Clear canvas"
-                    style={{ padding: '0.45rem 0.75rem', fontSize: '0.8rem' }}
+                    aria-label="Clear canvas"
+                    style={{ padding: '0.45rem 0.65rem', fontSize: '0.8rem' }}
                   >
                     <Trash2 size={14} />
-                    <span>Clear</span>
                   </button>
                 </div>
 
-                <button
-                  className="btn-start-practice-prominent"
-                  onClick={handleVerify}
-                  disabled={strokes.length === 0 || isVerifying || verificationResult?.isCorrect}
-                  style={{ padding: '0.45rem 1.1rem', fontSize: '0.84rem' }}
-                >
-                  {isVerifying ? (
-                    <span>Checking...</span>
-                  ) : (
-                    <>
-                      <Check size={15} />
-                      <span>Check Drawing</span>
-                    </>
-                  )}
-                </button>
+                <div style={{ display: 'flex', gap: '0.4rem' }}>
+                  <button
+                    className={verificationResult ? 'btn-secondary' : 'btn-start-practice-prominent'}
+                    onClick={handleVerify}
+                    disabled={strokes.length === 0 || isVerifying || verificationResult?.isCorrect}
+                    style={{ padding: '0.45rem 1.1rem', fontSize: '0.84rem' }}
+                  >
+                    {isVerifying ? (
+                      <span>Checking...</span>
+                    ) : (
+                      <>
+                        <Check size={15} />
+                        <span>{verificationResult && !verificationResult.isCorrect ? 'Check Again' : 'Check Drawing'}</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    className={verificationResult ? 'btn-start-practice-prominent' : 'btn-secondary'}
+                    onClick={handleNext}
+                    disabled={!verificationResult}
+                    title={verificationResult ? 'Next character (Enter)' : 'Check your drawing first'}
+                    style={{ padding: '0.45rem 0.95rem', fontSize: '0.84rem' }}
+                  >
+                    <span>Next</span>
+                    <ArrowRight size={14} />
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Right Column: Feedback or Calligraphy Guidelines Panel */}
-            <div style={{ flex: '1 1 360px', maxWidth: '560px', minWidth: '300px' }}>
+            <div style={{ flex: '1 1 280px', maxWidth: '460px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               {verificationResult ? (
                 /* Active Verification Feedback Panel */
                 <div
@@ -1075,15 +1137,6 @@ export const DrawTestView: React.FC<DrawTestViewProps> = ({
                         </div>
                       </div>
                     </div>
-
-                    <button
-                      className="btn-start-practice-prominent"
-                      onClick={handleNext}
-                      style={{ padding: '0.4rem 0.95rem', fontSize: '0.82rem' }}
-                    >
-                      <span>Next</span>
-                      <ArrowRight size={14} />
-                    </button>
                   </div>
 
                   <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '0.75rem' }}>
@@ -1184,55 +1237,55 @@ export const DrawTestView: React.FC<DrawTestViewProps> = ({
                   )}
                 </div>
               ) : (
-                /* Calligraphy Target Guidelines (Before Verification) */
+                /* Compact Calligraphy Guidelines (Before Verification) */
                 <div
                   className="glass-panel"
                   style={{
                     width: '100%',
-                    padding: '1.25rem',
+                    padding: '0.75rem 1rem',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '0.85rem',
+                    gap: '0.35rem',
                     borderLeft: '4px solid var(--accent-sakura)',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <PenTool size={16} color="var(--accent-sakura)" />
-                    <span style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <PenTool size={14} color="var(--accent-sakura)" />
+                    <span style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-primary)' }}>
                       Calligraphy Guidelines
                     </span>
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', background: 'var(--bg-secondary)', padding: '0.75rem', borderRadius: '4px' }}>
-                    <div style={{ fontSize: '0.84rem', color: 'var(--text-secondary)' }}>
-                      Target symbol for <strong>"{currentKana.romaji}"</strong> requires{' '}
-                      <strong style={{ color: 'var(--accent-sakura)' }}>
-                        {targetStrokeCount} {targetStrokeCount === 1 ? 'stroke' : 'strokes'}
-                      </strong>.
-                    </div>
-                  </div>
-
-                  <ul style={{ fontSize: '0.82rem', color: 'var(--text-muted)', paddingLeft: '1.2rem', margin: 0, lineHeight: 1.6 }}>
-                    <li>Draw all strokes that form the symbol on the canvas.</li>
-                    <li>Write with steady, natural speed: top-to-bottom and left-to-right.</li>
-                    <li>Need a reference? Click <strong>Show Guide</strong> above to see stroke paths.</li>
-                    <li>Click <strong>Check Drawing</strong> when done to evaluate calligraphy.</li>
-                  </ul>
-
-                  {(showMnemonic || !verificationResult) && currentKana.mnemonic && (
-                    <div
+                    <span
                       style={{
-                        background: 'var(--accent-gold-soft)',
-                        padding: '0.65rem 0.85rem',
-                        borderRadius: '4px',
-                        fontSize: '0.8rem',
-                        color: 'var(--text-secondary)',
-                        borderLeft: '3px solid var(--accent-gold)',
+                        fontSize: '0.74rem',
+                        fontWeight: 700,
+                        padding: '0.1rem 0.45rem',
+                        borderRadius: '3px',
+                        background: 'var(--bg-secondary)',
+                        color: 'var(--accent-sakura)',
                       }}
                     >
-                      💡 <strong>Memory Tip:</strong> {currentKana.mnemonic}
-                    </div>
-                  )}
+                      {targetStrokeCount} {targetStrokeCount === 1 ? 'stroke' : 'strokes'}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.45 }}>
+                    Top-to-bottom, left-to-right. Use <strong>Show Guide</strong> for stroke paths, then <strong>Check Drawing</strong>.
+                  </div>
+                </div>
+              )}
+
+              {showMnemonic && currentKana.mnemonic && (
+                <div
+                  style={{
+                    background: 'var(--accent-gold-soft)',
+                    padding: '0.65rem 0.85rem',
+                    borderRadius: '4px',
+                    fontSize: '0.8rem',
+                    color: 'var(--text-secondary)',
+                    borderLeft: '3px solid var(--accent-gold)',
+                    animation: 'fadeIn 0.2s ease',
+                  }}
+                >
+                  💡 <strong>Memory Tip:</strong> {currentKana.mnemonic}
                 </div>
               )}
             </div>
