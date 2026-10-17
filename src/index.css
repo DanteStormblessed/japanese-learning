@@ -186,7 +186,7 @@ select {
   min-height: 100vh;
   max-width: 1080px;
   margin: 0 auto;
-  padding: 0 1.25rem 2rem 1.25rem;
+  padding: env(safe-area-inset-top, 0) max(1.25rem, env(safe-area-inset-right, 0)) max(2rem, env(safe-area-inset-bottom, 0)) max(1.25rem, env(safe-area-inset-left, 0));
 }
 
 /* ===== HEADER — clean, no boxing ===== */
